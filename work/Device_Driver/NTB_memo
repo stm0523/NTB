@@ -1,0 +1,63 @@
+**　memory mapped I/Oでのデバイスへのアクセス方法(PCIデバイスの場合)
+   * PCIデバイスに対しての、マッピング
+     PCI/PCIe デバイスは、I/Oポート・MMIOのいずれかでアクセスを行うが、デバイスによって、
+   アクセス方法を変える（I/Oポート・MMIO）ことは複雑になる。そのため、以下のように抽象
+   的なインターフェイスが用意されている。pci_iomap()　　includeヘッダーは<asm/iomap.h>
+   指定したBARを読み取り、I/OポートかMMIOでマッピング処理を切り替え、カーネル仮想アドレス
+   を消す。
+   　アクセスが不要になった場合は、pci_iounmap()を利用して、マッピングを解除する。
+
+    * PCIデバイスへのアクセス
+      pci_iomap()でマッピングしたアドレスを利よして、レジスタアクセスする場合は、直接
+    ポインタで指定してはいけない。以下の専用関数を利用して、アクセスを行う。
+    includeヘッダーは<asm/io.h>にある。
+
+      Readの場合  
+         ioread8()      8bit read   
+         ioread16()     16bit read
+         ioread32()     32bit read
+      Writeの場合  
+         iowrite8       8bit write
+         iowrite16      16bit write
+         iowrite32      32bit write
+
+
+
+
+**　memory mapped I/Oでのデバイスへのアクセス方法(一般論)
+   大雑把には以下のような流れ。
+
+   1.request_mem_region()  :メモリ領域の予約
+   2.ioremap_nocache()     :マッピング
+      マッピングが不要になったら。
+   3.iounmap()             :マッピング解除
+   4.release_mem_region()  :メモリ領域の解除
+
+   * memory mapped I/O　ドライバの物理メモリへのアクセス (ioremap function)
+  ドライバからMMIO領域へアクセスするには、ioremap()を利用して、物理メモリアドレスを
+　カーネル仮想アドレスへマッピングする必要がある。
+  includeヘッダは, ”asm/io.h”
+
+   * memory mapped I/O　ドライバの物理メモリへのアクセス (ioremap_nocache function)
+  ただし、キャッシュにより、正しくデバイスにアクセスできない場合がある。メモリマップ
+　ドI/Oで、デバイスにアクセスしたつもりが、キャッシュに残っているデータが返される場合
+　があり、正しくデバイスにアクセスできなくなる。
+　　この場合は、ioremap_nocache() 関数を利用する必要がある。この関数を利用すると、
+　ページテーブルにキャッシュディスエーぶるのbitが立てられ、キャッシュが無効となる。
+
+   * memory mapped I/O　ドライバの物理メモリへの解除 
+
+　メモリマップドI/Oが不要になった場合はドライバはiounmap()を利用して、明示的にマッピング
+　を解除する必要がある。
+
+   * memoryの予約と予約解除
+
+  通常はioremap()で、メモリを確保する前に、競合を防ぐために、事前にメモリ領域を予約しておく
+  ことが推奨される。予約が完了すると、 /proc/iomemで確認することができる。
+  また、iounmap()でマッピングを解除した後に、予約を解除する必要がある。
+
+  予約      request_mem_region()
+  予約解除  release_memregion()
+
+
+

@@ -1,0 +1,1 @@
+cmd_/home/EE/NTB/work/sample_code/memory_mapped_IO/memory_mapped.ko := ld -r -m elf_x86_64 -T /usr/src/kernels/3.10.0-327.el7.x86_64/scripts/module-common.lds --build-id  -o /home/EE/NTB/work/sample_code/memory_mapped_IO/memory_mapped.ko /home/EE/NTB/work/sample_code/memory_mapped_IO/memory_mapped.o /home/EE/NTB/work/sample_code/memory_mapped_IO/memory_mapped.mod.o
